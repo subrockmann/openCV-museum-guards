@@ -16,6 +16,7 @@ def read_yaml(file_path):
         return yaml.safe_load(f)
 
 creds = read_yaml("credentials.yml")
+camera_config = read_yaml("camera_config.yml")
 
 # MQTT server environment variables
 HOSTNAME = socket.gethostname()
@@ -43,14 +44,29 @@ def connect_mqtt():
     client.connect(MQTT_HOST, MQTT_PORT)#, MQTT_KEEPALIVE_INT ERVAL)
     return client
 
+def publish_status(status):
+    global client
+    message ={
+        'room_no': camera_config['room_no'],
+        'camera_id': camera_config['camera_id'],
+        'object_id': camera_config['object_id'],
+        'object_name': camera_config['object_name'],
+        'status': status
+    }
+    message = json.dumps(message, indent=4)
+    client.publish("danger", message)
+
+    return message
+
 if __name__ == '__main__':
     client = connect_mqtt()
     print(client)
     client.loop_start()
 
     time.sleep(5)
-    client.publish("OAK","OFF")
+    status = 'OK'
+    publish_status(status)
     time.sleep(5)
     client.loop_stop()
     client.disconnect()
-    #client.publish("house/main-light","OFF")
+    
