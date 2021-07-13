@@ -16,15 +16,15 @@ def read_yaml(file_path):
     with open(file_path, "r") as f:
         return yaml.safe_load(f)
 
-creds = read_yaml("credentials.yml")
-camera_config = read_yaml("camera_config.yml")
+creds = read_yaml("monitor_credentials.yml")
+#camera_config = read_yaml("camera_config.yml")
 
 MQTT_HOST = "homeassistant"
 MQTT_PORT = 1883
 MQTT_KEEPALIVE_INTERVAL = 60
 MQTT_USER = creds['user']
 MQTT_PW = creds['password']
-client_id = camera_config['camera_id']
+client_id = creds['user']
 QOS = 1 # quality of service
 
 subscription_topics =['danger', 'OAK-1']
@@ -43,7 +43,8 @@ def on_connect(client, userdata, flags, rc):
 
     # Subscribing in on_connect() means that if we lose the connection and
     # reconnect then subscriptions will be renewed.
-    #client.subscribe('OAK-1', qos=1)
+    (result, mid) = client.subscribe('OAK-1', qos=1)
+    print(mid)
     (result, mid) = client.subscribe('danger', qos=1)
     print(mid)
 
@@ -51,10 +52,10 @@ def on_message(client, userdata, msg):
     # more callbacks, etc
     # Create a file with write byte permission
     print(f"Received a message! {msg}")
-    #f = open('output.jpg', "wb")
-    #f.write(msg.payload)
-    #print("Image Received")
-    #f.close()
+    f = open('output.jpg', "wb")
+    f.write(msg.payload)
+    print("Image Received")
+    f.close()
 
 def connect_mqtt():
     ### TODO: Connect to the MQTT client ###

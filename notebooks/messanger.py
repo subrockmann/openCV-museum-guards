@@ -84,8 +84,8 @@ if __name__ == '__main__':
 
     time.sleep(5)
     status = 'OK'
-    publish_status(status)
-    #publish_image()
+    #publish_status(status)
+    publish_image()
     time.sleep(5)
     client.loop_stop()
     client.disconnect()
