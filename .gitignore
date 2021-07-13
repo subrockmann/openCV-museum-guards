@@ -130,3 +130,4 @@ dmypy.json
 
 # custom files
 */credentials.yml
+*/monitor-credentials.yml
