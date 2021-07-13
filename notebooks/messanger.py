@@ -10,14 +10,17 @@ import yaml
 
 import logging as log
 import paho.mqtt.client as mqtt
-import paho.mqtt.publish as publish
+# import paho.mqtt.publish as publish
 
-def read_yaml(file_path):
-    with open(file_path, "r") as f:
-        return yaml.safe_load(f)
+import utils
 
-creds = read_yaml("credentials.yml")
-camera_config = read_yaml("camera_config.yml")
+
+# def read_yaml(file_path):
+#     with open(file_path, "r") as f:
+#         return yaml.safe_load(f)
+
+creds = utils.read_yaml("credentials.yml")
+camera_config = utils.read_yaml("camera_config.yml")
 
 # MQTT server environment variables
 #HOSTNAME = socket.gethostname()
@@ -69,7 +72,7 @@ image_name = 'portrait.jpg'
 def publish_image():
     f=open(image_name, "rb") 
     fileContent = f.read()
-    print(fileContent)
+    #print(fileContent)
     byteArr = bytearray(fileContent)
     #publish.single('danger', byteArr, hostname=MQTT_HOST)
     client.publish(camera_config['camera_id'], byteArr)

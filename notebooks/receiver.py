@@ -12,12 +12,12 @@ import logging as log
 import paho.mqtt.client as mqtt
 import paho.mqtt.publish as publish
 
-def read_yaml(file_path):
-    with open(file_path, "r") as f:
-        return yaml.safe_load(f)
+import utils
 
-creds = read_yaml("monitor_credentials.yml")
-#camera_config = read_yaml("camera_config.yml")
+
+
+creds = utils.read_yaml("monitor_credentials.yml")
+#camera_config = utils.read_yaml("camera_config.yml")
 
 MQTT_HOST = "homeassistant"
 MQTT_PORT = 1883
