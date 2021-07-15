@@ -8,6 +8,7 @@ import time
 import random
 import yaml
 from base64 import b64encode
+from datetime import datetime
 
 import logging as log
 import paho.mqtt.client as mqtt
@@ -33,6 +34,12 @@ MQTT_USER = creds['user']
 MQTT_PW = creds['password']
 client_id = camera_config['camera_id']
 QOS = 1 # quality of service
+
+def create_timestamp():
+    now = datetime.now()
+    date_time = now.strftime("%Y%m%d_%H%M%S")
+    #print(date_time)
+    return date_time	
 
 # callback function for MQTT
 def on_connect(client, userdata, flags, rc):
@@ -88,9 +95,12 @@ def publish_image_with_metadata():
     byteArr = bytearray(fileContent)
     #publish.single('danger', byteArr, hostname=MQTT_HOST)
     # JSON-encode
+    timestamp = create_timestamp()
     message = { 
         #"image" : bytearray(fileContent), # does not work because bytearray is not serializable
         "image": b64.decode("utf-8"),
+        "filename": str(camera_config['camera_id'])+ "_" + timestamp,
+        "timestamp": timestamp,
         'room_no': camera_config['room_no'],
         'camera_id': camera_config['camera_id'],
         'object_id': camera_config['object_id'],
@@ -113,6 +123,7 @@ if __name__ == '__main__':
     status = 'OK'
     #publish_status(status)
     #publish_image()
+    create_timestamp()
     publish_image_with_metadata()
     time.sleep(5)
     client.loop_stop()
