@@ -7,6 +7,7 @@ import cv2
 import time
 import random
 import yaml
+from base64 import b64encode
 
 import logging as log
 import paho.mqtt.client as mqtt
@@ -79,6 +80,29 @@ def publish_image():
 
     return fileContent
 
+def publish_image_with_metadata():
+    f=open(image_name, "rb") 
+    fileContent = f.read()
+    # Base64 encode
+    b64 = b64encode(fileContent)
+    byteArr = bytearray(fileContent)
+    #publish.single('danger', byteArr, hostname=MQTT_HOST)
+    # JSON-encode
+    message = { 
+        #"image" : bytearray(fileContent), # does not work because bytearray is not serializable
+        "image": b64.decode("utf-8"),
+        'room_no': camera_config['room_no'],
+        'camera_id': camera_config['camera_id'],
+        'object_id': camera_config['object_id'],
+        'object_name': camera_config['object_name']
+    }
+    messageJSON = json.dumps(message)
+    #client.publish(camera_config['camera_id'], byteArr)
+    client.publish(camera_config['camera_id'], messageJSON)
+
+
+    return fileContent
+
 
 if __name__ == '__main__':
     client = connect_mqtt()
@@ -88,7 +112,8 @@ if __name__ == '__main__':
     time.sleep(5)
     status = 'OK'
     #publish_status(status)
-    publish_image()
+    #publish_image()
+    publish_image_with_metadata()
     time.sleep(5)
     client.loop_stop()
     client.disconnect()
