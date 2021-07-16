@@ -47,7 +47,8 @@ def on_connect(client, userdata, flags, rc):
         print("Bad connection Returned code=",rc)
 
 def on_publish(client, userdata, mid):
-    print(" > published message: {}".format(mid))
+    #print(" > published message: {}".format(mid))
+    pass
 
 def connect_mqtt():
     ### TODO: Connect to the MQTT client ###
@@ -58,8 +59,8 @@ def connect_mqtt():
     client.connect(MQTT_HOST, MQTT_PORT)#, MQTT_KEEPALIVE_INT ERVAL)
     return client
 
-def publish_status(status):
-    global client
+def publish_status(status, client):
+    #global client
     message ={
         'room_no': camera_config['room_no'],
         'camera_id': camera_config['camera_id'],
@@ -85,12 +86,17 @@ def publish_image():
 
     return fileContent
 
-def publish_image_with_metadata():
-    f=open(image_name, "rb") 
-    fileContent = f.read()
+f=open(image_name, "rb") 
+fileContent = f.read()
+
+def publish_image_with_metadata(client, fileContent):
+    #if frame.all() == None:
+
+    #else:
+    #     fileContent = frame
     # Base64 encode
     b64 = b64encode(fileContent)
-    byteArr = bytearray(fileContent)
+    #byteArr = bytearray(fileContent)
     #publish.single('danger', byteArr, hostname=MQTT_HOST)
     # JSON-encode
     timestamp = create_timestamp()

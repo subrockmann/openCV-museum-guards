@@ -9,6 +9,11 @@ import cv2
 import depthai as dai
 import numpy as np
 import time
+from PIL import Image
+from base64 import b64encode
+import base64
+
+from messanger import connect_mqtt, publish_status, publish_image_with_metadata
 
 '''
 Spatial detection network demo.
@@ -99,8 +104,15 @@ spatialDetectionNetwork.boundingBoxMapping.link(xoutBoundingBoxDepthMapping.inpu
 stereo.depth.link(spatialDetectionNetwork.inputDepth)
 spatialDetectionNetwork.passthroughDepth.link(xoutDepth.input)
 
+# setup MQTT
+client = connect_mqtt()
+client.loop_start()
+
+
 # Pipeline is defined, now we can connect to the device
 with dai.Device(pipeline) as device:
+
+
     # Start pipeline
     device.startPipeline()
 
@@ -166,7 +178,7 @@ with dai.Device(pipeline) as device:
             y2 = int(detection.ymax * height)
 
 
-            print(f"Detection z: {detection.spatialCoordinates.z}")
+            #print(f"Detection z: {detection.spatialCoordinates.z}")
             try:
                 label = labelMap[detection.label]
             except:
@@ -174,9 +186,12 @@ with dai.Device(pipeline) as device:
             if label == 'person':
                 if detection.spatialCoordinates.z < z_threshold:
                     color = red
+                    #print(f"Detection z: {detection.spatialCoordinates.z}")
                     intrusion_counter +=1
-                else: color = green
-                print(f"Detection z: {detection.spatialCoordinates.z}")
+                else: 
+                    color = green
+                    intrusion_counter = -1  ## brute force, 
+
                 cv2.putText(frame, str(label), (x1 + 10, y1 + 20), cv2.FONT_HERSHEY_TRIPLEX, 0.5, color)
                 cv2.putText(frame, "{:.2f}".format(detection.confidence*100), (x1 + 10, y1 + 35), cv2.FONT_HERSHEY_TRIPLEX, 0.5, color)
                 cv2.putText(frame, f"X: {int(detection.spatialCoordinates.x)} mm", (x1 + 10, y1 + 50), cv2.FONT_HERSHEY_TRIPLEX, 0.5, color)
@@ -189,6 +204,19 @@ with dai.Device(pipeline) as device:
         cv2.putText(frame, "NN fps: {:.2f}".format(fps), (2, frame.shape[0] - 4), cv2.FONT_HERSHEY_TRIPLEX, 0.4, color)
         cv2.imshow("depth", depthFrameColor)
         cv2.imshow("rgb", frame)
+
+        if (intrusion_counter >5) and (intrusion_counter%30 ==0):
+            # send message over mqtt including the frame
+            print(intrusion_counter)
+            status = 'Intrusion'
+            #client.publish(status)
+            #publish_status(status, client)
+
+            retval, buffer = cv2.imencode('.jpg', frame)
+            #jpg_as_text = base64.b64encode(buffer)
+            #im_pil = Image.fromarray(frame)
+            publish_image_with_metadata(client, buffer)
+            #pass
 
         if cv2.waitKey(1) == ord('q'):
             break
