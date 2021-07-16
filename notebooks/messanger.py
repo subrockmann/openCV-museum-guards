@@ -25,15 +25,13 @@ creds = utils.read_yaml("credentials.yml")
 camera_config = utils.read_yaml("camera_config.yml")
 
 # MQTT server environment variables
-#HOSTNAME = socket.gethostname()
-#IPADDRESS = socket.gethostbyname(HOSTNAME)
-MQTT_HOST = "homeassistant"
-MQTT_PORT = 1883
-MQTT_KEEPALIVE_INTERVAL = 60
+MQTT_HOST =creds['broker']
+MQTT_PORT = creds['port']
+MQTT_KEEPALIVE_INTERVAL = creds['keep_alive']
 MQTT_USER = creds['user']
 MQTT_PW = creds['password']
 client_id = camera_config['camera_id']
-QOS = 1 # quality of service
+QOS = creds['qos'] # quality of service
 
 def create_timestamp():
     now = datetime.now()

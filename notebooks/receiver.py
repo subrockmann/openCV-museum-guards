@@ -15,18 +15,15 @@ import paho.mqtt.publish as publish
 
 import utils
 
-
-
 creds = utils.read_yaml("monitor_credentials.yml")
-#camera_config = utils.read_yaml("camera_config.yml")
 
-MQTT_HOST = "homeassistant"
-MQTT_PORT = 1883
-MQTT_KEEPALIVE_INTERVAL = 60
+MQTT_HOST =creds['broker']
+MQTT_PORT = creds['port']
+MQTT_KEEPALIVE_INTERVAL = creds['keep_alive']
 MQTT_USER = creds['user']
 MQTT_PW = creds['password']
 client_id = creds['user']
-QOS = 1 # quality of service
+QOS = creds['qos'] # quality of service
 
 subscription_topics =['danger', 'OAK-1']
 
