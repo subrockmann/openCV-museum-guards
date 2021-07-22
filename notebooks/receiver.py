@@ -40,38 +40,28 @@ def on_connect(client, userdata, flags, rc):
     print(mid)
 
 def extract_save_image(payload_json):
-    if payload_json['image'] and payload_json['filename']:
+    #if payload_json['image'] and payload_json['filename']:
+    if 'image' in payload_json.keys():
         print("Received an image!")
-        filename = payload_json['filename'] + ".jpg"
+        filename = payload_json['filename']# + ".jpg"
         image = b64decode(payload_json['image'])
         #print 
         f = open(filename, "wb")
         f.write(image)
-        #print("Image Received")
         f.close()
 
 
 def on_message(client, userdata, msg):
     # more callbacks, etc
     # Create a file with write byte permission
-    print(f"Received a message!")
-    #b64_r = json.loads(msg.payload)
-    #print(msg.payload['room_no'])
-    #print(msg.payload[0])
+    #print(f"Received a message!")
     message = json.loads(msg.payload)
-    #message = msg.payload
-    #b64 = b64decode(message)
-    #print(b64)
+
     payload = msg.payload.decode("utf-8")
     payload_json = json.loads(payload)
-    print(payload_json.keys())
-    #print(room['room_no'])
-    print(type(payload_json))
-    #f = open('output.jpg', "wb")
-    #f.write(msg.payload)
-    #print("Image Received")
-    #f.close()
+
     extract_save_image(payload_json)
+    
     return payload_json # do callback functions need a return value?
 
 def connect_mqtt():

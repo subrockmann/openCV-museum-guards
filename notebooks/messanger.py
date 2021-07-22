@@ -90,6 +90,7 @@ f=open(image_name, "rb")
 fileContent = f.read()
 
 def publish_image_with_metadata(client, fileContent):
+    now = datetime.now()
     #if frame.all() == None:
 
     #else:
@@ -103,8 +104,8 @@ def publish_image_with_metadata(client, fileContent):
     message = { 
         #"image" : bytearray(fileContent), # does not work because bytearray is not serializable
         "image": b64.decode("utf-8"),
-        "filename": str(camera_config['camera_id'])+ "_" + timestamp,
-        "timestamp": timestamp,
+        "filename": str(camera_config['camera_id'])+ "_" + str(now.strftime("%Y%m%d_%H%M%S")) + ".jpg",
+        "timestamp": str(now.strftime("%H:%M:%S %d.%m.%Y")),
         'room_no': camera_config['room_no'],
         'camera_id': camera_config['camera_id'],
         'object_id': camera_config['object_id'],
