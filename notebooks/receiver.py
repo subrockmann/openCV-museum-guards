@@ -8,6 +8,8 @@ import time
 import random
 from base64 import b64decode, b64encode
 #import yaml
+from pathlib import Path
+
 
 import logging as log
 import paho.mqtt.client as mqtt
@@ -16,6 +18,9 @@ import paho.mqtt.publish as publish
 import utils
 
 creds = utils.read_yaml("monitor_credentials.yml")
+data_folder = Path.cwd().parent.joinpath('data') 
+print(f"data_folder: {data_folder}")
+#os.path.join(os.path.dirname(os.getcwd()),'data')
 
 MQTT_HOST =creds['broker']
 MQTT_PORT = creds['port']
@@ -44,6 +49,7 @@ def extract_save_image(payload_json):
     if 'image' in payload_json.keys():
         print("Received an image!")
         filename = payload_json['filename']# + ".jpg"
+        filename = data_folder.joinpath(filename)
         image = b64decode(payload_json['image'])
         #print 
         f = open(filename, "wb")
