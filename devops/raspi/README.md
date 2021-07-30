@@ -28,7 +28,22 @@ sudo apt-get upgrade -y
 sudo pat-get dist-upgrade -y
 
 ```
-## Installing software packages
+## Installing git
+```
+sudo apt install git
+```
+## Installing Python 3
+Raspbian comes with Python 2.7.xx installed (as of this writing). You should uninstall that and install Python 3. To uninstall Python 2.7.xx, run the following commands:
+```
+sudo apt-get remove python
+sudo apt autoremove
+```
+Now start installing Python 3 and the required packages
+```
+sudo apt-get install python3
+```
+
+## Installing additional software packages
 sudo apt-get install python3-pip
 
 Upgrading pip:
@@ -46,8 +61,9 @@ sudo pip3 install paho-mqtt
 Install depthai:
 sudo pip3 install depthai
 
-Install GPIO libraries:
-sudo pip3 install adafruit-blinka
+Install GPIO libraries if you are running the code on Raspberry Pi:
+sudo apt-get install python3-rpi.gpio
+sudo apt-get install python3-smbus
 
 Configure I2C:
 sudo apt-get install -y pyton-smbus
