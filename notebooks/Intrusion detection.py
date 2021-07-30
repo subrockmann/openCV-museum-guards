@@ -4,6 +4,7 @@
 
 
 from pathlib import Path
+import argparse
 import sys
 import cv2
 import depthai as dai
@@ -24,11 +25,23 @@ Spatial detection network demo.
 labelMap = ["background", "aeroplane", "bicycle", "bird", "boat", "bottle", "bus", "car", "cat", "chair", "cow",
             "diningtable", "dog", "horse", "motorbike", "person", "pottedplant", "sheep", "sofa", "train", "tvmonitor"]
 
+
+# args
+parser = argparse.ArgumentParser()
+parser.add_argument('-hl', '--headless', action='store_true', help="Run camera in headless mode - no output to screen")
+args = parser.parse_args()
+if args.headless:
+    headless = args.headless
+else:
+    headless = False
+
+
 syncNN = True
 color = (255, 255, 255)
 red = (0, 0, 255)
 green = (0, 255,0)
 z_threshold = 1500 # set this threshold to raise an alarm if a person is closer
+
 
 
 # Get argument first
@@ -37,8 +50,8 @@ model_filename = 'mobilenet-ssd_openvino_2021.2_6shave.blob'
 nnBlobPath = str(model_dir.joinpath(model_filename))
 #print(nnBlobPath)
 
-if len(sys.argv) > 1:
-    nnBlobPath = sys.argv[1]
+#if len(sys.argv) > 1:
+#    nnBlobPath = sys.argv[1]
 
 if not Path(nnBlobPath).exists():
     print(nnBlobPath)
@@ -203,8 +216,10 @@ with dai.Device(pipeline) as device:
             
 
         cv2.putText(frame, "NN fps: {:.2f}".format(fps), (2, frame.shape[0] - 4), cv2.FONT_HERSHEY_TRIPLEX, 0.4, color)
-        cv2.imshow("depth", depthFrameColor)
-        cv2.imshow("rgb", frame)
+        
+        if headless == False:
+            cv2.imshow("depth", depthFrameColor)
+            cv2.imshow("rgb", frame)
 
         if (intrusion_counter >5) and (intrusion_counter%30 ==0):
             # send message over mqtt including the frame
