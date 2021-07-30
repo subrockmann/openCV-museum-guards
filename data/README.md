@@ -1,0 +1,1 @@
+# This directory contains all the images that were received.
