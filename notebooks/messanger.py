@@ -74,7 +74,7 @@ def publish_status(status, client):
 
     return message
 
-image_name = 'portrait.jpg'
+
 
 def publish_image():
     f=open(image_name, "rb") 
@@ -86,8 +86,7 @@ def publish_image():
 
     return fileContent
 
-f=open(image_name, "rb") 
-fileContent = f.read()
+
 
 def publish_image_with_metadata(client, fileContent):
     now = datetime.now()
@@ -117,20 +116,4 @@ def publish_image_with_metadata(client, fileContent):
 
 
     return fileContent
-
-
-if __name__ == '__main__':
-    client = connect_mqtt()
-    print(client)
-    client.loop_start()
-
-    time.sleep(5)
-    status = 'OK'
-    #publish_status(status)
-    #publish_image()
-    create_timestamp()
-    publish_image_with_metadata()
-    time.sleep(5)
-    client.loop_stop()
-    client.disconnect()
     
