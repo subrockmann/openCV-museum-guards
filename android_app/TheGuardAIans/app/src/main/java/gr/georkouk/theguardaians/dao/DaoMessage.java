@@ -33,7 +33,7 @@ public class DaoMessage {
 
     public static List<Message> getMqttMessages(){
         List<Message> messages = new ArrayList<>();
-        String sql = "select * from mqttMessage where seen = 0";
+        String sql = "select * from mqttMessage where seen = 0 order by mqttMessage desc";
 
         MyDB db = MyDB.getInstance().open();
 

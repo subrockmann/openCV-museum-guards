@@ -172,9 +172,11 @@ public class MainActivity extends AppCompatActivity {
 
                     saveImageFile(receivedMessage);
 
-                    adapter.addMessage(receivedMessage);
-
                     sendNotification(receivedMessage);
+
+                    adapter.swapData(
+                            DaoMessage.getMqttMessages()
+                    );
                 }
             }
 
