@@ -14,6 +14,7 @@ from PIL import Image
 from base64 import b64encode
 import base64
 
+
 from messanger import connect_mqtt, publish_status, publish_image_with_metadata
 
 '''
@@ -29,11 +30,26 @@ labelMap = ["background", "aeroplane", "bicycle", "bird", "boat", "bottle", "bus
 # args
 parser = argparse.ArgumentParser()
 parser.add_argument('-hl', '--headless', action='store_true', help="Run camera in headless mode - no output to screen")
+parser.add_argument('-l', '--led', action='store_true', help="Enable led indicators for Raspberry Pi")
 args = parser.parse_args()
+
 if args.headless:
     headless = args.headless
 else:
     headless = False
+
+if args.led:
+    # setup Raspberry Pi for use of indicator LEDs
+
+    import RPi.GPIO as GPIO
+    GREEN_LED = 17
+    RED_LED = 27
+    GPIO.setmode(GPIO.BCM)
+    GPIO.setup(17, GPIO.OUT)
+    GPIO.setup(27, GPIO.OUT)
+else:
+    pass
+
 
 
 syncNN = True
@@ -197,6 +213,8 @@ with dai.Device(pipeline) as device:
             except:
                 label = detection.label
             if label == 'person':
+                if args.led:
+                    GPIO.output(GREEN_LED,True)
                 if detection.spatialCoordinates.z < z_threshold:
                     color = red
                     #print(f"Detection z: {detection.spatialCoordinates.z}")
@@ -214,6 +232,9 @@ with dai.Device(pipeline) as device:
 
                 cv2.rectangle(frame, (x1, y1), (x2, y2), color, cv2.FONT_HERSHEY_SIMPLEX)
             
+            else:
+                if args.led:
+                    GPIO.output(GREEN_LED,False)
 
         cv2.putText(frame, "NN fps: {:.2f}".format(fps), (2, frame.shape[0] - 4), cv2.FONT_HERSHEY_TRIPLEX, 0.4, color)
         
@@ -225,6 +246,8 @@ with dai.Device(pipeline) as device:
             # send message over mqtt including the frame
             print(intrusion_counter)
             status = 'Intrusion'
+
+
             #client.publish(status)
             #publish_status(status, client)
 
@@ -234,5 +257,13 @@ with dai.Device(pipeline) as device:
             publish_image_with_metadata(client, buffer)
             #pass
 
+        if args.led:
+            if intrusion_counter <5:
+                GPIO.output(RED_LED,False)
+            elif intrusion_counter >10:
+                GPIO.output(RED_LED,True)
+
         if cv2.waitKey(1) == ord('q'):
+            if args.led:
+                GPIO.cleanup()
             break
