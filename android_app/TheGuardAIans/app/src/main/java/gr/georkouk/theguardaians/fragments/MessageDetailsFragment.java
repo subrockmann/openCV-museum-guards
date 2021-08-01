@@ -117,8 +117,9 @@ public class MessageDetailsFragment extends Fragment {
 
     @OnClick(R.id.btSeen)
     public void setMessageSeen(){
-        Toast.makeText(getContext(), "Message status was set to: Seen", Toast.LENGTH_LONG).show();
         DaoMessage.setMessageSeen(this.message.getId());
+
+        back();
     }
 
     @OnClick(R.id.imageView)

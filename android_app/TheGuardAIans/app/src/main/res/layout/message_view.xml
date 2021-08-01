@@ -195,7 +195,7 @@
         android:layout_marginEnd="4dp"
         android:layout_marginBottom="4dp"
         app:icon="@drawable/ic_baseline_remove_red_eye_36"
-        android:text="Mark as Read"
+        android:text="Delete"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/btBack"
         app:layout_constraintStart_toStartOf="parent" />
