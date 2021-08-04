@@ -178,7 +178,9 @@ with dai.Device(pipeline) as device:
                 ymax = int(bottomRight.y)
 
                 cv2.rectangle(depthFrameColor, (xmin, ymin), (xmax, ymax), color, cv2.FONT_HERSHEY_SCRIPT_SIMPLEX)
-
+        else: 
+            color = green
+            intrusion_counter = -1  ## brute force, 
 
         # If the frame is available, draw bounding boxes on it and show the frame
         height = frame.shape[0]
