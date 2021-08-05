@@ -50,24 +50,19 @@ if args.led:
 else:
     pass
 
-
-
 syncNN = True
+white = (255, 255, 255)
 color = (255, 255, 255)
 red = (0, 0, 255)
 green = (0, 255,0)
 z_threshold = 1500 # set this threshold to raise an alarm if a person is closer
-
-
+IMAGE_FREQUENCY = 15 # send image ever x frames
 
 # Get argument first
 model_dir = Path.cwd().parent.joinpath('models')
 model_filename = 'mobilenet-ssd_openvino_2021.2_6shave.blob'
 nnBlobPath = str(model_dir.joinpath(model_filename))
 #print(nnBlobPath)
-
-#if len(sys.argv) > 1:
-#    nnBlobPath = sys.argv[1]
 
 if not Path(nnBlobPath).exists():
     print(nnBlobPath)
@@ -137,10 +132,8 @@ spatialDetectionNetwork.passthroughDepth.link(xoutDepth.input)
 client = connect_mqtt()
 client.loop_start()
 
-
 # Pipeline is defined, now we can connect to the device
 with dai.Device(pipeline) as device:
-
 
     # Start pipeline
     device.startPipeline()
@@ -157,8 +150,7 @@ with dai.Device(pipeline) as device:
     startTime = time.monotonic()
     counter = 0
     fps = 0
-    intrusion_counter = 0 ## TODO use this counter for checking for smoothing the intrusion counts 
-
+    intrusion_counter = 0 
 
     while True:
         inPreview = previewQueue.get()
@@ -195,7 +187,6 @@ with dai.Device(pipeline) as device:
 
                 cv2.rectangle(depthFrameColor, (xmin, ymin), (xmax, ymax), color, cv2.FONT_HERSHEY_SCRIPT_SIMPLEX)
 
-
         # If the frame is available, draw bounding boxes on it and show the frame
         height = frame.shape[0]
         width  = frame.shape[1]
@@ -205,7 +196,6 @@ with dai.Device(pipeline) as device:
             x2 = int(detection.xmax * width)
             y1 = int(detection.ymin * height)
             y2 = int(detection.ymax * height)
-
 
             #print(f"Detection z: {detection.spatialCoordinates.z}")
             try:
@@ -223,12 +213,12 @@ with dai.Device(pipeline) as device:
                     color = green
                     intrusion_counter = -1  ## brute force, 
 
-                cv2.putText(frame, str(label), (x1 + 10, y1 + 20), cv2.FONT_HERSHEY_TRIPLEX, 0.5, color)
-                cv2.putText(frame, "{:.2f}".format(detection.confidence*100), (x1 + 10, y1 + 35), cv2.FONT_HERSHEY_TRIPLEX, 0.5, color)
-                cv2.putText(frame, f"X: {int(detection.spatialCoordinates.x)} mm", (x1 + 10, y1 + 50), cv2.FONT_HERSHEY_TRIPLEX, 0.5, color)
-                cv2.putText(frame, f"Y: {int(detection.spatialCoordinates.y)} mm", (x1 + 10, y1 + 65), cv2.FONT_HERSHEY_TRIPLEX, 0.5, color)
-                cv2.putText(frame, f"Z: {int(detection.spatialCoordinates.z)} mm", (x1 + 10, y1 + 80), cv2.FONT_HERSHEY_TRIPLEX, 0.5, color)
-                #cv2.putText(frame, f"Z: {int(detection.depthMin)} mm", (x1 + 10, y1 + 80), cv2.FONT_HERSHEY_TRIPLEX, 0.5, color)
+                #cv2.putText(frame, str(label), (x1 + 10, y1 + 20), cv2.FONT_HERSHEY_TRIPLEX, 0.5, color)
+                cv2.putText(frame, "{:.2f}".format(detection.confidence*100), (x1 + 10, max(0,y1 - 10)), cv2.FONT_HERSHEY_TRIPLEX, 0.5, color)
+                #cv2.putText(frame, f"X: {int(detection.spatialCoordinates.x)} mm", (x1 + 10, y1 + 50), cv2.FONT_HERSHEY_TRIPLEX, 0.5, color)
+                #cv2.putText(frame, f"Y: {int(detection.spatialCoordinates.y)} mm", (x1 + 10, y1 + 65), cv2.FONT_HERSHEY_TRIPLEX, 0.5, color)
+                cv2.putText(frame, f"Z: {int(detection.spatialCoordinates.z)} mm", (x1 + 10, max(0,y2 - 10)), cv2.FONT_HERSHEY_TRIPLEX, 0.5, color)
+                
 
                 cv2.rectangle(frame, (x1, y1), (x2, y2), color, cv2.FONT_HERSHEY_SIMPLEX)
             
@@ -236,13 +226,13 @@ with dai.Device(pipeline) as device:
                 if args.led:
                     GPIO.output(GREEN_LED,False)
 
-        cv2.putText(frame, "NN fps: {:.2f}".format(fps), (2, frame.shape[0] - 4), cv2.FONT_HERSHEY_TRIPLEX, 0.4, color)
+        cv2.putText(frame, "NN fps: {:.2f}".format(fps), (frame.shape[1] - 100,  12), cv2.FONT_HERSHEY_TRIPLEX, 0.4, white)
         
         if headless == False:
             cv2.imshow("depth", depthFrameColor)
             cv2.imshow("rgb", frame)
 
-        if (intrusion_counter >5) and (intrusion_counter%30 ==0):
+        if (intrusion_counter >5) and (intrusion_counter % IMAGE_FREQUENCY ==0):
             # send message over mqtt including the frame
             print(intrusion_counter)
             status = 'Intrusion'
@@ -254,7 +244,7 @@ with dai.Device(pipeline) as device:
             retval, buffer = cv2.imencode('.jpg', frame)
             #jpg_as_text = base64.b64encode(buffer)
             #im_pil = Image.fromarray(frame)
-            publish_image_with_metadata(client, buffer)
+            publish_image_with_metadata(client, buffer, status)
             #pass
 
         if args.led:
