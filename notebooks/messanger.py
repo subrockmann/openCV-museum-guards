@@ -88,7 +88,7 @@ def publish_image():
 
 
 
-def publish_image_with_metadata(client, fileContent):
+def publish_image_with_metadata(client, fileContent, status):
     now = datetime.now()
     #if frame.all() == None:
 
@@ -108,7 +108,8 @@ def publish_image_with_metadata(client, fileContent):
         'room_no': camera_config['room_no'],
         'camera_id': camera_config['camera_id'],
         'object_id': camera_config['object_id'],
-        'object_name': camera_config['object_name']
+        'object_name': camera_config['object_name'],
+        'status': status
     }
     messageJSON = json.dumps(message)
     #client.publish(camera_config['camera_id'], byteArr)
