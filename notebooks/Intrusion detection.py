@@ -151,6 +151,10 @@ with dai.Device(pipeline) as device:
     counter = 0
     fps = 0
     intrusion_counter = 0 
+    people_counter = 0
+
+    people = False
+    intrusion = False
 
     while True:
         inPreview = previewQueue.get()
@@ -165,6 +169,8 @@ with dai.Device(pipeline) as device:
             startTime = current_time
 
         frame = inPreview.getCvFrame()
+        height = frame.shape[0]
+        width  = frame.shape[1]
         depthFrame = depth.getFrame()
 
         depthFrameColor = cv2.normalize(depthFrame, None, 255, 0, cv2.NORM_INF, cv2.CV_8UC1)
@@ -172,72 +178,104 @@ with dai.Device(pipeline) as device:
         depthFrameColor = cv2.applyColorMap(depthFrameColor, cv2.COLORMAP_HOT)
         detections = inNN.detections
 
+        people_per_frame = 0
+        intrusion_per_frame = 0
 
         if len(detections) != 0:
 
+            # If the frame is available, draw bounding boxes on it and show the frame
+            for detection in detections:
+                try:
+                    label = labelMap[detection.label]
+                except:
+                    label = detection.label
+
+                # Person detected    
+                if label == 'person':
+                    people_per_frame +=1
 
 
+                    boundingBoxMapping = xoutBoundingBoxDepthMapping.get()
+                    roiDatas = boundingBoxMapping.getConfigData()
 
+                    for roiData in roiDatas:
+                        roi = roiData.roi
+                        roi = roi.denormalize(depthFrameColor.shape[1], depthFrameColor.shape[0])
+                        topLeft = roi.topLeft()
+                        bottomRight = roi.bottomRight()
+                        xmin = int(topLeft.x)
+                        ymin = int(topLeft.y)
+                        xmax = int(bottomRight.x)
+                        ymax = int(bottomRight.y)
 
+                        cv2.rectangle(depthFrameColor, (xmin, ymin), (xmax, ymax), color, cv2.FONT_HERSHEY_SCRIPT_SIMPLEX)
 
-            boundingBoxMapping = xoutBoundingBoxDepthMapping.get()
-            roiDatas = boundingBoxMapping.getConfigData()
+                    # Denormalize bounding box
+                    x1 = int(detection.xmin * width)
+                    x2 = int(detection.xmax * width)
+                    y1 = int(detection.ymin * height)
+                    y2 = int(detection.ymax * height)
 
-            for roiData in roiDatas:
-                roi = roiData.roi
-                roi = roi.denormalize(depthFrameColor.shape[1], depthFrameColor.shape[0])
-                topLeft = roi.topLeft()
-                bottomRight = roi.bottomRight()
-                xmin = int(topLeft.x)
-                ymin = int(topLeft.y)
-                xmax = int(bottomRight.x)
-                ymax = int(bottomRight.y)
+                    # if args.led:
+                    #     GPIO.output(GREEN_LED,True)
 
-                cv2.rectangle(depthFrameColor, (xmin, ymin), (xmax, ymax), color, cv2.FONT_HERSHEY_SCRIPT_SIMPLEX)
+                    if detection.spatialCoordinates.z < z_threshold:
+                        color = red
+                        intrusion_per_frame +=1
+
+                    else: 
+                        color = green
+                        #intrusion_counter -= 1
+                        #intrusion_counter = max(intrusion_counter, 0)
+                         
+
+                    #cv2.putText(frame, str(label), (x1 + 10, y1 + 20), cv2.FONT_HERSHEY_TRIPLEX, 0.5, color)
+                    cv2.putText(frame, "{:.2f}".format(detection.confidence*100), (x1 + 10, max(0,y1 - 10)), cv2.FONT_HERSHEY_TRIPLEX, 0.5, color)
+                    #cv2.putText(frame, f"X: {int(detection.spatialCoordinates.x)} mm", (x1 + 10, y1 + 50), cv2.FONT_HERSHEY_TRIPLEX, 0.5, color)
+                    #cv2.putText(frame, f"Y: {int(detection.spatialCoordinates.y)} mm", (x1 + 10, y1 + 65), cv2.FONT_HERSHEY_TRIPLEX, 0.5, color)
+                    cv2.putText(frame, f"Z: {int(detection.spatialCoordinates.z)} mm", (x1 + 10, max(0,y2 - 10)), cv2.FONT_HERSHEY_TRIPLEX, 0.5, color)
+                    cv2.rectangle(frame, (x1, y1), (x2, y2), color, cv2.FONT_HERSHEY_SIMPLEX)
+                
+                # detection, but no person
+                # else:
+                #     intrusion_counter -=1 
+                #     intrusion_counter = max(intrusion_counter, 0)  
+                #     people_counter -= 1
+                    # if args.led:
+                    #     GPIO.output(RED_LED,False)
+                    #     GPIO.output(GREEN_LED,False)
+
+            # summary for all detections per frame
+            if intrusion_per_frame >0:
+                intrusion_counter +=1
+                intrusion_counter = min(intrusion_counter, 10)
+            else:
+                intrusion_counter = intrusion_counter -1
+                intrusion_counter = max(intrusion_counter, 0)
+            
+            if people_per_frame >0:
+                people_counter += 1
+                people_counter = min(people_counter, 10)
+            else:
+                people_counter = people_counter -1
+                people_counter = max(people_counter, 0)
+
+        # No detections
         else: 
             color = green
-            intrusion_counter = 0  ## brute force, 
-            if args.led:
-                GPIO.output(GREEN_LED,False)
-                GPIO.output(RED_LED,False)
+            intrusion_counter = intrusion_counter -1
+            intrusion_counter = max(intrusion_counter, 0)
+            people_counter = people_counter -1
+            people_counter = max(people_counter, 0)
+            # if args.led:
+            #     GPIO.output(GREEN_LED,False)
+            #     GPIO.output(RED_LED,False)
 
-        # If the frame is available, draw bounding boxes on it and show the frame
-        height = frame.shape[0]
-        width  = frame.shape[1]
-        for detection in detections:
-            try:
-                label = labelMap[detection.label]
-            except:
-                label = detection.label
-            if label == 'person':
-                # Denormalize bounding box
-                x1 = int(detection.xmin * width)
-                x2 = int(detection.xmax * width)
-                y1 = int(detection.ymin * height)
-                y2 = int(detection.ymax * height)
+        #print(f"Intrusions: {intrusion_counter} - persons: {people_counter}")
 
 
-                if args.led:
-                    GPIO.output(GREEN_LED,True)
-                if detection.spatialCoordinates.z < z_threshold:
-                    color = red
-                    intrusion_counter +=1
-                else: 
-                    color = green
-                    intrusion_counter =0  ## brute force, 
 
-                #cv2.putText(frame, str(label), (x1 + 10, y1 + 20), cv2.FONT_HERSHEY_TRIPLEX, 0.5, color)
-                cv2.putText(frame, "{:.2f}".format(detection.confidence*100), (x1 + 10, max(0,y1 - 10)), cv2.FONT_HERSHEY_TRIPLEX, 0.5, color)
-                #cv2.putText(frame, f"X: {int(detection.spatialCoordinates.x)} mm", (x1 + 10, y1 + 50), cv2.FONT_HERSHEY_TRIPLEX, 0.5, color)
-                #cv2.putText(frame, f"Y: {int(detection.spatialCoordinates.y)} mm", (x1 + 10, y1 + 65), cv2.FONT_HERSHEY_TRIPLEX, 0.5, color)
-                cv2.putText(frame, f"Z: {int(detection.spatialCoordinates.z)} mm", (x1 + 10, max(0,y2 - 10)), cv2.FONT_HERSHEY_TRIPLEX, 0.5, color)
-                cv2.rectangle(frame, (x1, y1), (x2, y2), color, cv2.FONT_HERSHEY_SIMPLEX)
-            
-            else:
-                if args.led:
-                    GPIO.output(RED_LED,False)
-                    GPIO.output(GREEN_LED,False)
-
+        # code that is run for every frame
         cv2.putText(frame, "NN fps: {:.2f}".format(fps), (frame.shape[1] - 100,  12), cv2.FONT_HERSHEY_TRIPLEX, 0.4, white)
         
         if headless == False:
@@ -249,7 +287,6 @@ with dai.Device(pipeline) as device:
             print(intrusion_counter)
             status = 'Intrusion'
 
-
             #client.publish(status)
             #publish_status(status, client)
 
@@ -260,11 +297,19 @@ with dai.Device(pipeline) as device:
             #pass
 
         if args.led:
-            if intrusion_counter <5:
+            # RED LED
+            if intrusion_counter <= 5:
                 GPIO.output(RED_LED,False)
-            elif intrusion_counter >10:
+            else:
                 GPIO.output(RED_LED,True)
 
+            # GREEN LED
+            if people_counter <= 5:
+                GPIO.output(GREEN_LED,False)
+            else:
+                GPIO.output(GREEN_LED,True)
+
+        # quit the program
         if cv2.waitKey(1) == ord('q'):
             if args.led:
                 GPIO.cleanup()
