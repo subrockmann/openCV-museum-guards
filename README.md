@@ -1,6 +1,8 @@
 # openCV-museum-guards
 openCV-museum-guards - an innovative system for art protection. Phase 2 project of the "OpenCV AI Competition 2021".
 
+## Problem Statement  
+Museums and historical sites around the world have the mission to protect and display our cultural heritage. Fascinating treasures of our past are attracting more and more visitors every year that want to see original masterpieces and feel the special sensation that these artifacts radiate. From a conversational standpoint it would probably be best to lock these precious items away but that conflicts with the museums’ mission to educate and serve the society.  
+Museums try to find a balance between presenting the objects to the public while protecting the often delicate, precious and irreplaceable objects. Keeping objects inside armored glass showcases is feasible for small objects but has its limitations when dealing with large statues, large paintings or parts of complete buildings. Apart from that the museums are trying to present their objects in an unobstructed way for a greater visitor experience.   
+Considering the different kinds of threats there is professional burglary or vandalism on the one hand and mostly unintentional contact or souvenir hunting on the other side. There can be serious damages to the pieces of art when people touch or lean on them. In some cases statues are broken and in most cases, especially when a museum has thousands or millions of visitors, the surface of some pieces is damaged because of constant rubbing and this cannot be recovered via conservation. Even slightly touching objects with bare fingers will cause unrestorable chemical reactions on the surface of the objects.  
 
-required libraries:
-conda install -c conda-forge paho-mqtt
